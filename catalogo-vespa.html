@@ -1,0 +1,789 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Archivio Vespa — Catálogo Histórico</title>
+<style>
+  :root{
+    --panna:#EFE6D2;
+    --panna-alta:#F7F1E3;
+    --crema-card:#FFFCF4;
+    --verde-vespa:#33513C;
+    --verde-oscuro:#213328;
+    --rosso-corsa:#A3392B;
+    --inchiostro:#241F17;
+    --inchiostro-suave:#5B5346;
+    --oro:#AD8A47;
+    --linea:#D8CBA9;
+    --sombra: 0 2px 0 rgba(36,31,23,0.08), 0 10px 24px -12px rgba(36,31,23,0.35);
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;background:var(--panna);color:var(--inchiostro);}
+  body{
+    font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    -webkit-tap-highlight-color: transparent;
+    padding-bottom:60px;
+  }
+  h1,h2,h3,.display{
+    font-family: Georgia, "Iowan Old Style", "Palatino Linotype", "Times New Roman", serif;
+    letter-spacing:0.01em;
+  }
+  a{color:inherit;}
+
+  /* Textura de fondo sutil tipo papel de archivo */
+  .paper-texture{
+    position:fixed; inset:0; pointer-events:none; z-index:0; opacity:0.5;
+    background-image:
+      repeating-linear-gradient(90deg, rgba(36,31,23,0.02) 0px, rgba(36,31,23,0.02) 1px, transparent 1px, transparent 90px),
+      repeating-linear-gradient(0deg, rgba(36,31,23,0.02) 0px, rgba(36,31,23,0.02) 1px, transparent 1px, transparent 90px);
+  }
+
+  /* HERO */
+  .hero{
+    position:relative;
+    background: linear-gradient(180deg, var(--verde-oscuro) 0%, var(--verde-vespa) 62%, var(--panna) 100%);
+    color:#EFE6D2;
+    padding: 34px 20px 70px;
+    overflow:hidden;
+  }
+  .hero:before{
+    content:"";
+    position:absolute; right:-60px; top:-60px; width:280px; height:280px; border-radius:50%;
+    border: 1.5px solid rgba(239,230,210,0.14);
+  }
+  .hero:after{
+    content:"";
+    position:absolute; right:-10px; top:20px; width:200px; height:200px; border-radius:50%;
+    border: 1.5px solid rgba(239,230,210,0.10);
+  }
+  .eyebrow{
+    display:flex; align-items:center; gap:10px;
+    font-size:11px; letter-spacing:0.22em; text-transform:uppercase;
+    color:#C9BFA1; margin-bottom:18px;
+  }
+  .eyebrow .dot{width:5px;height:5px;border-radius:50%;background:var(--oro);}
+  .hero h1{
+    font-size:38px; line-height:1.05; margin:0 0 10px; max-width:520px;
+    color:#FBF6E9;
+  }
+  .hero h1 em{ color: var(--oro); font-style:normal; }
+  .hero p.lead{
+    max-width:480px; font-size:15px; line-height:1.55; color:#D8CFB6; margin:0 0 26px;
+  }
+  .hero-stats{
+    display:flex; gap:26px; flex-wrap:wrap; margin-top:22px;
+  }
+  .hero-stat .num{ font-family:Georgia, serif; font-size:26px; color:#FBF6E9; }
+  .hero-stat .lbl{ font-size:10.5px; letter-spacing:0.1em; text-transform:uppercase; color:#B7AC8D; margin-top:2px;}
+
+  /* PANEL DE CONTROLES flotante bajo hero */
+  .controls{
+    position:relative; z-index:2;
+    margin: -46px 16px 20px;
+    background: var(--crema-card);
+    border-radius:14px;
+    box-shadow: var(--sombra);
+    border:1px solid var(--linea);
+    padding:14px;
+  }
+  .search-row{ display:flex; gap:8px; margin-bottom:12px; }
+  .search-row input{
+    flex:1;
+    border:1px solid var(--linea);
+    background:#FFFEFA;
+    border-radius:9px;
+    padding:11px 12px;
+    font-size:14.5px;
+    color:var(--inchiostro);
+    outline:none;
+  }
+  .search-row input:focus{ border-color:var(--verde-vespa); }
+  .counter-pill{
+    display:flex; align-items:center; justify-content:center;
+    background:var(--verde-vespa); color:#F3ECD8;
+    border-radius:9px; padding:0 14px; font-size:13px; white-space:nowrap; font-variant-numeric: tabular-nums;
+  }
+  .filter-label{ font-size:10.5px; text-transform:uppercase; letter-spacing:0.12em; color:var(--inchiostro-suave); margin:10px 2px 6px;}
+  .chip-row{ display:flex; gap:7px; overflow-x:auto; padding-bottom:4px; scrollbar-width:none;}
+  .chip-row::-webkit-scrollbar{display:none;}
+  .chip{
+    flex:0 0 auto;
+    padding:6px 13px; border-radius:999px;
+    border:1px solid var(--linea);
+    background:#FFFEFA; color:var(--inchiostro-suave);
+    font-size:12.5px; cursor:pointer; white-space:nowrap;
+    transition: all .15s ease;
+  }
+  .chip.active{
+    background:var(--rosso-corsa); border-color:var(--rosso-corsa); color:#FBF1E8;
+  }
+
+  /* GRID */
+  .grid-wrap{ padding: 4px 16px 10px; position:relative; z-index:1;}
+  .grid{
+    display:grid; grid-template-columns:1fr; gap:14px;
+  }
+  @media(min-width:640px){ .grid{grid-template-columns:1fr 1fr;} .hero h1{font-size:46px;} }
+  @media(min-width:980px){ .grid{grid-template-columns:1fr 1fr 1fr;} }
+
+  /* CARD tipo "targhetta" / placa técnica */
+  .card{
+    background:var(--crema-card);
+    border-radius:12px;
+    border:1px solid var(--linea);
+    box-shadow: var(--sombra);
+    overflow:hidden;
+    display:flex; flex-direction:column;
+  }
+  .card-top{
+    background: var(--verde-vespa);
+    color:#F3ECD8;
+    padding:13px 14px 12px;
+    display:flex; align-items:flex-start; justify-content:space-between; gap:10px;
+    position:relative;
+  }
+  .card-top .badge-era{
+    position:absolute; top:10px; right:10px;
+    width:38px;height:38px;border-radius:50%;
+    border:1.4px solid rgba(243,236,216,0.55);
+    display:flex;align-items:center;justify-content:center;
+    font-size:9.5px; font-weight:600; letter-spacing:0.02em;
+    color:#F3ECD8;
+  }
+  .card-top h3{
+    margin:0; font-size:17px; line-height:1.2; padding-right:44px; color:#FBF6E9;
+  }
+  .card-top .years{ font-size:12px; color:#C9BFA1; margin-top:4px; }
+  .card-flag-row{
+    display:flex; align-items:center; gap:6px; margin-top:8px; font-size:12px; color:#D8CFB6;
+  }
+  .codigo-chasis{
+    display:inline-block; margin-top:6px;
+    font-family: ui-monospace, "SF Mono", "Courier New", monospace;
+    font-size:12.5px; letter-spacing:0.03em;
+    color: var(--oro); background: rgba(173,138,71,0.15);
+    border:1px solid rgba(173,138,71,0.4);
+    border-radius:5px; padding:2px 7px;
+  }
+  .tag-serie{
+    background:rgba(51,81,60,0.12); color:var(--verde-vespa); border-color:rgba(51,81,60,0.3);
+  }
+  .tag-row{ display:flex; gap:6px; flex-wrap:wrap; padding:10px 14px 0; }
+  .tag{
+    font-size:10px; text-transform:uppercase; letter-spacing:0.06em;
+    padding:3px 8px; border-radius:999px;
+    background:rgba(163,57,43,0.1); color:var(--rosso-corsa);
+    border:1px solid rgba(163,57,43,0.25);
+  }
+  .specs{
+    padding:10px 14px 6px;
+    display:grid; grid-template-columns:1fr 1fr; gap:8px 10px;
+  }
+  .spec{ border-top:1px dashed var(--linea); padding-top:6px; }
+  .spec .k{ font-size:9.5px; text-transform:uppercase; letter-spacing:0.08em; color:var(--inchiostro-suave); }
+  .spec .v{ font-size:13px; color:var(--inchiostro); margin-top:1px; font-weight:600; }
+  .desc{
+    padding:8px 14px 16px; font-size:12.8px; line-height:1.5; color:var(--inchiostro-suave); flex:1;
+  }
+  .btn-usar-modelo{
+    margin:0 14px 14px; padding:10px; border-radius:9px; border:none;
+    background:var(--verde-vespa); color:#F3ECD8; font-size:12.5px; font-weight:600; cursor:pointer;
+  }
+  .btn-usar-modelo:hover{ background:var(--verde-oscuro); }
+  .btn-usar-modelo.enviado{ background:var(--rosso-corsa); }
+
+  .empty-state{
+    text-align:center; padding:60px 20px; color:var(--inchiostro-suave);
+  }
+  .empty-state .icn{font-size:34px; margin-bottom:10px;}
+  .btn-add-pendiente{
+    margin-top:18px; padding:11px 18px; border-radius:10px;
+    background:var(--verde-vespa); color:#F3ECD8; border:none;
+    font-size:13.5px; cursor:pointer; font-weight:600;
+  }
+  .btn-add-pendiente:hover{ background:var(--verde-oscuro); }
+  .btn-add-pendiente:disabled{ background:var(--linea); color:var(--inchiostro-suave); cursor:default; }
+  .pendiente-hint{
+    max-width:340px; margin:12px auto 0; font-size:11.5px; line-height:1.5; color:var(--inchiostro-suave); opacity:0.85;
+  }
+  .btn-pendientes{
+    margin-top:18px; background:rgba(239,230,210,0.12); border:1px solid rgba(239,230,210,0.35);
+    color:#F3ECD8; padding:9px 16px; border-radius:999px; font-size:12.5px; cursor:pointer;
+  }
+  .btn-pendientes:hover{ background:rgba(239,230,210,0.2); }
+  .btn-pendientes span{
+    display:inline-flex; align-items:center; justify-content:center; min-width:18px; height:18px;
+    background:var(--rosso-corsa); color:#FBF1E8; border-radius:999px; font-size:10.5px; padding:0 5px; margin-left:4px;
+  }
+
+  #panelPendientesOverlay{
+    position:fixed; inset:0; z-index:95; display:none;
+    align-items:center; justify-content:center; background:rgba(33,29,23,0.65); padding:16px;
+  }
+  #panelPendientesOverlay.show{ display:flex; }
+  .panel-pendientes{
+    background:var(--crema-card); border-radius:14px; border:1px solid var(--linea);
+    width:100%; max-width:440px; max-height:80vh; display:flex; flex-direction:column; overflow:hidden;
+    box-shadow: var(--sombra);
+  }
+  .panel-top{
+    display:flex; align-items:center; justify-content:space-between;
+    padding:14px 16px; background:var(--verde-vespa); color:#F3ECD8; font-weight:700; font-size:14.5px;
+  }
+  .panel-top .cerrar{ background:none; border:none; color:#F3ECD8; font-size:16px; cursor:pointer; }
+  .panel-body{ padding:10px 14px; overflow-y:auto; display:flex; flex-direction:column; gap:8px; flex:1; }
+  .pendiente-item{
+    display:flex; align-items:center; justify-content:space-between; gap:10px;
+    background:#FFFEFA; border:1px solid var(--linea); border-radius:9px; padding:9px 11px;
+  }
+  .pendiente-item .txt{ font-size:13px; color:var(--inchiostro); }
+  .pendiente-item .fecha{ font-size:10.5px; color:var(--inchiostro-suave); display:block; margin-top:2px; }
+  .pendiente-item button{
+    background:none; border:none; color:var(--rosso-corsa); cursor:pointer; font-size:15px; flex-shrink:0;
+  }
+  .panel-empty{ text-align:center; padding:30px 10px; color:var(--inchiostro-suave); font-size:13px; }
+  .panel-actions{ display:flex; gap:8px; padding:12px 14px; border-top:1px solid var(--linea); }
+  .pbtn-mini{
+    flex:1; padding:9px; border-radius:9px; border:1px solid var(--linea); background:#FFFEFA;
+    font-size:12.5px; cursor:pointer; color:var(--inchiostro);
+  }
+  .pbtn-mini.danger{ color:var(--rosso-corsa); border-color:rgba(163,57,43,0.35); }
+  .pbtn-mini:hover{ border-color:var(--verde-vespa); }
+
+  footer{
+    text-align:center; padding:26px 20px 10px; color:var(--inchiostro-suave); font-size:11.5px; line-height:1.6;
+  }
+  footer .marca{ color:var(--verde-vespa); font-weight:700; font-family:Georgia,serif; font-size:13px;}
+
+  /* Scrollbar leve */
+  ::-webkit-scrollbar{width:8px;height:8px;}
+  ::-webkit-scrollbar-thumb{background:var(--linea); border-radius:8px;}
+</style>
+</head>
+<body>
+<div class="paper-texture"></div>
+
+<div class="hero">
+  <div class="eyebrow"><span class="dot"></span> ARCHIVIO STORICO · 1946 — HOY</div>
+  <h1>Todas las <em>Vespa</em>.<br>Modelo a modelo,<br>país a país.</h1>
+  <p class="lead">Un catálogo de referencia de la scooter más famosa del mundo: desde el prototipo MP6 de Pontedera hasta las ediciones fabricadas bajo licencia en media Europa, India, Brasil y Estados Unidos.</p>
+  <div class="hero-stats">
+    <div class="hero-stat"><div class="num" id="stat-total">—</div><div class="lbl">Fichas</div></div>
+    <div class="hero-stat"><div class="num" id="stat-paises">—</div><div class="lbl">Países</div></div>
+    <div class="hero-stat"><div class="num">1946</div><div class="lbl">Origen</div></div>
+  </div>
+  <button class="btn-pendientes" id="btnAbrirPendientes">📋 Modelos pendientes <span id="pendientesCount">0</span></button>
+</div>
+
+<div class="controls">
+  <div class="search-row">
+    <input type="text" id="search" placeholder="Buscar modelo, motor, país…" autocomplete="off">
+    <div class="counter-pill" id="counter">0</div>
+  </div>
+
+  <div class="filter-label">Época</div>
+  <div class="chip-row" id="chips-decada"></div>
+
+  <div class="filter-label">País de fabricación</div>
+  <div class="chip-row" id="chips-pais"></div>
+
+  <div class="filter-label">Serie técnica (sigla de chasis)</div>
+  <div class="chip-row" id="chips-serie"></div>
+</div>
+
+<div class="grid-wrap">
+  <div class="grid" id="grid"></div>
+  <div class="empty-state" id="empty" style="display:none;">
+    <div class="icn">🔍</div>
+    <div id="emptyText">Ningún modelo coincide con esa búsqueda.</div>
+    <button class="btn-add-pendiente" id="btnGuardarPendiente">➕ Guardar «<span id="pendienteTermino"></span>» como pendiente</button>
+    <div class="pendiente-hint">Se guarda en este dispositivo. Luego copias la lista y me la pasas en el chat para que investigue y añada la ficha real.</div>
+  </div>
+</div>
+
+<div id="panelPendientesOverlay">
+  <div class="panel-pendientes">
+    <div class="panel-top">
+      <span>📋 Modelos pendientes de añadir</span>
+      <button class="cerrar" id="cerrarPendientes">✕</button>
+    </div>
+    <div class="panel-body" id="listaPendientes"></div>
+    <div class="panel-actions">
+      <button class="pbtn-mini" id="btnCopiarPendientes">📋 Copiar lista</button>
+      <button class="pbtn-mini danger" id="btnVaciarPendientes">🗑 Vaciar lista</button>
+    </div>
+  </div>
+</div>
+
+<footer>
+  <div class="marca">ARCHIVIO VESPA</div>
+  Catálogo de referencia histórica compilado a partir de fuentes públicas.<br>
+  Datos de producción y prestaciones aproximados según documentación de época — pueden variar entre mercados.
+</footer>
+
+<script>
+// ---------------------------------------------------------------
+// BASE DE DATOS: modelos Vespa por época y país de fabricación
+// ---------------------------------------------------------------
+const MODELOS = [
+// =================================================================
+// SERIE ORIGEN — prototipos y primera Vespa (Italia)
+// =================================================================
+{n:"MP5 «Paperino»", codigo:"MP5", serie:"Orígenes", anio:"1945", pais:"Italia", flag:"🇮🇹", decada:"origenes", motor:"2T, monocilíndrico", cc:"98cc", pot:"—", vel:"—", peso:"—", bastidor:"—", tag:"Prototipo", d:"Prototipo previo a la Vespa construido en la fábrica de Biella. Los propios trabajadores lo apodaron «Pato Donald» por su silueta. Se construyeron cerca de cien unidades antes de ser descartado."},
+{n:"MP6", codigo:"MP6", serie:"Orígenes", anio:"1945", pais:"Italia", flag:"🇮🇹", decada:"origenes", motor:"2T, 98cc", cc:"98cc", pot:"3,2 CV", vel:"60 km/h", peso:"~60 kg", bastidor:"—", tag:"Prototipo", d:"El prototipo definitivo de Corradino D'Ascanio: chasis monocasco, cambio en el manillar y rueda de repuesto integrada. Al verlo, Enrico Piaggio exclamó que parecía una avispa — de ahí nace el nombre."},
+{n:"Vespa 98", codigo:"V98", serie:"V — 98/125 pequeña", anio:"1946–1947", pais:"Italia", flag:"🇮🇹", decada:"1940s", motor:"2T, monocilíndrico", cc:"98cc", pot:"3,2 CV a 4.500 rpm", vel:"60 km/h", peso:"~60 kg", bastidor:"01 – 18.079", tag:"Primera serie", d:"El primer modelo de producción, presentado el 23 de abril de 1946. Chasis monocasco de chapa de acero, tres velocidades y plataforma plana."},
+
+// =================================================================
+// SERIE V/VM/VN — 125cc clásica de chasis grande (Italia, 1948-1965)
+// =================================================================
+{n:"Vespa 125 «Super» (V1-15T)", codigo:"V1-15T", serie:"VN — 125cc clásica", anio:"1948–1950", pais:"Italia", flag:"🇮🇹", decada:"1940s", motor:"2T, puerto de pistón", cc:"125cc", pot:"—", vel:"—", peso:"—", bastidor:"0001 – 104096", tag:"Icónico", d:"Primera evolución de la 98 a 125cc, con suspensión trasera nueva y brazo delantero reubicado a la derecha de la rueda."},
+{n:"Vespa 125 (V33T)", codigo:"V33T", serie:"VN — 125cc clásica", anio:"1950–1952", pais:"Italia", flag:"🇮🇹", decada:"1950s", motor:"2T", cc:"125cc", pot:"—", vel:"—", peso:"—", bastidor:"104097 – 251820", tag:"Icónico", d:"Continuación de la serie 125 con mejoras progresivas de fabricación durante el boom de posguerra."},
+{n:"Vespa 125 (VM1T)", codigo:"VM1T", serie:"VN — 125cc clásica", anio:"1952–1953", pais:"Italia", flag:"🇮🇹", decada:"1950s", motor:"2T", cc:"125cc", pot:"—", vel:"—", peso:"—", bastidor:"1001 – 85870", tag:"Icónico", d:"Primer modelo con cófano lateral derecho completo en lugar del capó abierto anterior, y depósito ampliado a 6,25 litros."},
+{n:"Vespa 125 (VM2T)", codigo:"VM2T", serie:"VN — 125cc clásica", anio:"1953–1954", pais:"Italia", flag:"🇮🇹", decada:"1950s", motor:"2T", cc:"125cc", pot:"—", vel:"—", peso:"—", bastidor:"85871 – 176014", tag:"Icónico", d:"Revisión de la VM1T con mejoras de detalle en carburación y embrague."},
+{n:"Vespa 125 U (VU1T)", codigo:"VU1T", serie:"VN — 125cc clásica", anio:"1953", pais:"Italia", flag:"🇮🇹", decada:"1950s", motor:"2T", cc:"125cc", pot:"—", vel:"—", peso:"—", bastidor:"1001 – 7001", tag:"Serie muy limitada", d:"Versión «Utilitaria» económica, con solo unas 7.000 unidades fabricadas. Muy buscada por coleccionistas."},
+{n:"Vespa 125 (VN1T)", codigo:"VN1T", serie:"VN — 125cc clásica", anio:"1954–1955", pais:"Italia", flag:"🇮🇹", decada:"1950s", motor:"2T", cc:"125cc", pot:"—", vel:"—", peso:"—", bastidor:"1001 – 50100", tag:"Icónico", d:"Esta es la versión de 1951-54 que aparece en «Vacaciones en Roma», con amortiguador hidráulico delantero y cambio por cables suaves."},
+{n:"Vespa 125 (VN2T)", codigo:"VN2T", serie:"VN — 125cc clásica", anio:"1956–1957", pais:"Italia", flag:"🇮🇹", decada:"1950s", motor:"2T", cc:"125cc", pot:"—", vel:"—", peso:"—", bastidor:"50101 – 125600", tag:"Icónico", d:"Última evolución antes del rediseño «widebody» VNA, con acabados progresivamente mejorados."},
+{n:"Vespa 125 (VNA1T)", codigo:"VNA1T", serie:"VNA/VNB — 125cc «widebody»", anio:"1957–1958", pais:"Italia", flag:"🇮🇹", decada:"1950s", motor:"2T, reparto rotativo", cc:"125cc", pot:"—", vel:"—", peso:"—", bastidor:"1001 – 68031", tag:"Icónico", d:"Primera Vespa con carrocería formada por dos semicarcasas de acero soldadas y mandos ocultos en el manillar. El carburador pasó de bajo el sillín a la parte superior del cárter."},
+{n:"Vespa 125 (VNA2T)", codigo:"VNA2T", serie:"VNA/VNB — 125cc «widebody»", anio:"1958–1959", pais:"Italia", flag:"🇮🇹", decada:"1950s", motor:"2T, reparto rotativo", cc:"125cc", pot:"—", vel:"—", peso:"—", bastidor:"68032 – 116431", tag:"Icónico", d:"Conocida como la «Dolce Vita», producida en gris y beige. Última Vespa en usar mezcla de gasolina y aceite al 5%."},
+{n:"Vespa 125 (VNB1T)", codigo:"VNB1T", serie:"VNA/VNB — 125cc «widebody»", anio:"1959–1961", pais:"Italia", flag:"🇮🇹", decada:"1950s", motor:"2T, reparto rotativo", cc:"125cc", pot:"—", vel:"—", peso:"—", bastidor:"1001 – 89850", tag:"Icónico", d:"Sucesora de la VNA con la parte trasera del chasis aplanada, sustituyendo el manillar abierto de los modelos anteriores por uno completamente carenado."},
+{n:"Vespa 125 (VNB2T)", codigo:"VNB2T", serie:"VNA/VNB — 125cc «widebody»", anio:"1961", pais:"Italia", flag:"🇮🇹", decada:"1960s", motor:"2T", cc:"125cc", pot:"—", vel:"—", peso:"—", bastidor:"1001 – 38699", tag:"Icónico", d:"Revisión de detalle de la VNB1T, con mejoras menores de fabricación."},
+{n:"Vespa 125 (VNB3T)", codigo:"VNB3T", serie:"VNA/VNB — 125cc «widebody»", anio:"1961–1962", pais:"Italia", flag:"🇮🇹", decada:"1960s", motor:"2T", cc:"125cc", pot:"—", vel:"—", peso:"—", bastidor:"34700 – 90395", tag:"Icónico", d:"Continuación de la serie VNB con ajustes de producción de la primera mitad de los 60."},
+{n:"Vespa 125 (VNB4T)", codigo:"VNB4T", serie:"VNA/VNB — 125cc «widebody»", anio:"1962–1963", pais:"Italia", flag:"🇮🇹", decada:"1960s", motor:"2T", cc:"125cc", pot:"—", vel:"—", peso:"—", bastidor:"90396 – 136485", tag:"Icónico", d:"Cuarta revisión de la serie VNB, previa a la llegada de la VNC."},
+{n:"Vespa 125 (VNB5T)", codigo:"VNB5T", serie:"VNA/VNB — 125cc «widebody»", anio:"1963–1964", pais:"Italia", flag:"🇮🇹", decada:"1960s", motor:"2T", cc:"125cc", pot:"—", vel:"—", peso:"—", bastidor:"1001 – 43240", tag:"Icónico", d:"Penúltima serie VNB antes del cierre de esta familia de 125cc de chasis grande."},
+{n:"Vespa 125 (VNB6T)", codigo:"VNB6T", serie:"VNA/VNB — 125cc «widebody»", anio:"1964–1966", pais:"Italia", flag:"🇮🇹", decada:"1960s", motor:"2T", cc:"125cc", pot:"—", vel:"—", peso:"—", bastidor:"1001 – 37028", tag:"Icónico", d:"Última evolución de la serie VNB, coexistiendo ya con la VNC de nueva generación."},
+{n:"Vespa 125 Super (VNC1T)", codigo:"VNC1T", serie:"VNC/VBC — Super", anio:"1965–1969", pais:"Italia", flag:"🇮🇹", decada:"1960s", motor:"2T", cc:"125cc", pot:"—", vel:"—", peso:"—", bastidor:"1001 – 25146", tag:"Icónico", d:"Rebautizada «Super», con acabados más modernos y mejoras de confort respecto a la familia VNB."},
+{n:"Vespa 125 GT / Sprint (VNL2T)", codigo:"VNL2T", serie:"VNL — GT/Sprint/GTR", anio:"1966–1973", pais:"Italia", flag:"🇮🇹", decada:"1960s", motor:"2T", cc:"125cc", pot:"—", vel:"—", peso:"—", bastidor:"30001 – 81582", tag:"Deportivo", d:"Chasis idéntico al de la Sprint 150, con ruedas de 10 pulgadas y faro trapezoidal. Muy apreciada por el público joven de la época."},
+{n:"Vespa 125 GTR (VNL2T)", codigo:"VNL2T", serie:"VNL — GT/Sprint/GTR", anio:"1968–1978", pais:"Italia", flag:"🇮🇹", decada:"1970s", motor:"2T", cc:"125cc", pot:"—", vel:"—", peso:"—", bastidor:"100001 – 151788", tag:"Deportivo", d:"Evolución de la GT/Sprint con el mismo código de chasis pero numeración independiente, producida en paralelo durante toda la década de los 70."},
+{n:"Vespa 125 TS (VNL3T)", codigo:"VNL3T", serie:"VNL — GT/Sprint/GTR", anio:"1975–1978", pais:"Italia", flag:"🇮🇹", decada:"1970s", motor:"2T", cc:"125cc", pot:"—", vel:"—", peso:"—", bastidor:"1101 – 29804", tag:"Deportivo", d:"«Turismo Sport», la más rápida de la familia de 125cc de chasis grande de su época, con acabados deportivos exclusivos."},
+
+// =================================================================
+// SERIE VB/VL/VGL — 150cc clásica de chasis grande (Italia, 1954-1979)
+// =================================================================
+{n:"Vespa 150 (VL1T)", codigo:"VL1T", serie:"VB/VL — 150cc clásica", anio:"1954–1955", pais:"Italia", flag:"🇮🇹", decada:"1950s", motor:"2T", cc:"150cc", pot:"—", vel:"—", peso:"—", bastidor:"1001 – 17000", tag:"Icónico", d:"Primera Vespa de 150cc, hermana mayor de la 125 con más comodidad y mejores prestaciones."},
+{n:"Vespa 150 (VL2T)", codigo:"VL2T", serie:"VB/VL — 150cc clásica", anio:"1955–1956", pais:"Italia", flag:"🇮🇹", decada:"1950s", motor:"2T", cc:"150cc", pot:"—", vel:"—", peso:"—", bastidor:"17001 – 93101", tag:"Icónico", d:"Coincide con el año en que salió de fábrica la Vespa número un millón."},
+{n:"Vespa 150 (VL3T)", codigo:"VL3T", serie:"VB/VL — 150cc clásica", anio:"1956–1957", pais:"Italia", flag:"🇮🇹", decada:"1950s", motor:"2T", cc:"150cc", pot:"—", vel:"—", peso:"—", bastidor:"93102 – 132737", tag:"Icónico", d:"Continuación de la familia 150 con mejoras menores previas a la introducción del manillar carenado."},
+{n:"Vespa 150 (VB1T)", codigo:"VB1T", serie:"VB/VL — 150cc clásica", anio:"1957–1958", pais:"Italia", flag:"🇮🇹", decada:"1950s", motor:"2T", cc:"150cc", pot:"—", vel:"—", peso:"—", bastidor:"1001 – 99700", tag:"Icónico", d:"Introdujo el manillar carenado en una sola pieza con los cables ocultos por dentro, dando un aspecto más elegante a la gama 150."},
+{n:"Vespa 150 (VBA1T)", codigo:"VBA1T", serie:"VBA/VBB — 150cc «widebody»", anio:"1958–1960", pais:"Italia", flag:"🇮🇹", decada:"1950s", motor:"2T, reparto rotativo", cc:"150cc", pot:"—", vel:"—", peso:"—", bastidor:"1001 – 125040", tag:"Icónico", d:"Sucesora de las Vespa de manillar abierto, con carrocería completamente rediseñada y carburador reubicado sobre el motor."},
+{n:"Vespa 150 (VBB1T)", codigo:"VBB1T", serie:"VBA/VBB — 150cc «widebody»", anio:"1960–1962", pais:"Italia", flag:"🇮🇹", decada:"1960s", motor:"2T", cc:"150cc", pot:"—", vel:"—", peso:"—", bastidor:"1001 – 146000", tag:"Icónico", d:"Con la parte trasera del chasis aplanada respecto a la VBA, manteniendo el juego de ruedas de 8 pulgadas."},
+{n:"Vespa 150 (VBB2T)", codigo:"VBB2T", serie:"VBA/VBB — 150cc «widebody»", anio:"1962–1967", pais:"Italia", flag:"🇮🇹", decada:"1960s", motor:"2T", cc:"150cc", pot:"—", vel:"—", peso:"—", bastidor:"146001 – 280148", tag:"Icónico", d:"La versión de mayor tirada de la familia VBB, producida durante cinco años consecutivos."},
+{n:"Vespa 150 Super (VBC1T)", codigo:"VBC1T", serie:"VNC/VBC — Super", anio:"1965–1979", pais:"Italia", flag:"🇮🇹", decada:"1960s", motor:"2T", cc:"150cc", pot:"—", vel:"—", peso:"—", bastidor:"1001 – 554808", tag:"Icónico", d:"La Super 150 más longeva, en producción catorce años seguidos con más de 550.000 unidades numeradas."},
+{n:"Vespa 150 Sprint (VLB1T)", codigo:"VLB1T", serie:"VLB — Sprint/Veloce", anio:"1965–1974", pais:"Italia", flag:"🇮🇹", decada:"1960s", motor:"2T", cc:"150cc", pot:"—", vel:"—", peso:"—", bastidor:"1001 – 1205477", tag:"Deportivo", d:"Versión deportiva de chasis grande con más de un millón de unidades numeradas, uno de los códigos de mayor producción de toda la historia Vespa."},
+{n:"Vespa 150 Veloce (VLB1T)", codigo:"VLB1T", serie:"VLB — Sprint/Veloce", anio:"1969–1979", pais:"Italia", flag:"🇮🇹", decada:"1970s", motor:"2T", cc:"150cc", pot:"—", vel:"—", peso:"—", bastidor:"150001 – 368119", tag:"Deportivo", d:"Variante «Veloce» de la Sprint, producida en paralelo con numeración de bastidor independiente."},
+{n:"Vespa 150 GL (VGL1T)", codigo:"VGL1T", serie:"VGL — Gran Lusso", anio:"1957–1958", pais:"Italia", flag:"🇮🇹", decada:"1950s", motor:"2T", cc:"150cc", pot:"—", vel:"—", peso:"—", bastidor:"1001 – 16610", tag:"Gama alta", d:"«Gran Lusso», versión de acabados superiores dentro de la gama 150 de finales de los 50."},
+{n:"Vespa 150 GL (VGLA1T)", codigo:"VGLA1T", serie:"VGL — Gran Lusso", anio:"1959–1961", pais:"Italia", flag:"🇮🇹", decada:"1950s", motor:"2T", cc:"150cc", pot:"—", vel:"—", peso:"—", bastidor:"1001 – 35267", tag:"Gama alta", d:"Evolución de la GL original con mejoras de acabado y equipamiento."},
+{n:"Vespa 150 GL (VGLB1T)", codigo:"VGLB1T", serie:"VGL — Gran Lusso", anio:"1961–1962", pais:"Italia", flag:"🇮🇹", decada:"1960s", motor:"2T", cc:"150cc", pot:"—", vel:"—", peso:"—", bastidor:"35268 – 48294", tag:"Gama alta", d:"Última revisión de la GL antes de su sustitución por la VLA1T."},
+{n:"Vespa 150 GL (VLA1T)", codigo:"VLA1T", serie:"VGL — Gran Lusso", anio:"1962–1965", pais:"Italia", flag:"🇮🇹", decada:"1960s", motor:"2T", cc:"150cc", pot:"—", vel:"—", peso:"—", bastidor:"1001 – 80855", tag:"Gama alta", d:"Cierre de la familia Gran Lusso, con el mayor volumen de fabricación de todas las variantes GL."},
+
+// =================================================================
+// SERIE VS/VSB — GS 150 y GS 160 (Italia, 1955-1964)
+// =================================================================
+{n:"Vespa 150 GS (VS1T)", codigo:"VS1T", serie:"GS — Gran Sport", anio:"1955", pais:"Italia", flag:"🇮🇹", decada:"1950s", motor:"2T", cc:"150cc", pot:"~8 CV", vel:"~100 km/h", peso:"—", bastidor:"1001 – 13300", tag:"Deportivo", d:"La primera «Gran Sport» de la historia Vespa, fruto de la experiencia del equipo de carreras Piaggio. Asiento alargado y ruedas de 10 pulgadas."},
+{n:"Vespa 150 GS (VS2T)", codigo:"VS2T", serie:"GS — Gran Sport", anio:"1956", pais:"Italia", flag:"🇮🇹", decada:"1950s", motor:"2T", cc:"150cc", pot:"~8 CV", vel:"~100 km/h", peso:"—", bastidor:"13301 – 23310", tag:"Deportivo", d:"Segunda revisión de la GS150 con mejoras progresivas de motor y frenado."},
+{n:"Vespa 150 GS (VS3T)", codigo:"VS3T", serie:"GS — Gran Sport", anio:"1957", pais:"Italia", flag:"🇮🇹", decada:"1950s", motor:"2T", cc:"150cc", pot:"~8 CV", vel:"~100 km/h", peso:"—", bastidor:"23311 – 35310", tag:"Deportivo", d:"Cables de control ocultos por dentro del manillar y batería de bajo perfil integrada en la bolsa de herramientas."},
+{n:"Vespa 150 GS (VS4T)", codigo:"VS4T", serie:"GS — Gran Sport", anio:"1958", pais:"Italia", flag:"🇮🇹", decada:"1950s", motor:"2T", cc:"150cc", pot:"~8 CV", vel:"~100 km/h", peso:"—", bastidor:"35311 – 47350", tag:"Deportivo", d:"Cuarta serie de la GS150, con el escudo frontal reforzado con borde de acero inoxidable."},
+{n:"Vespa 150 GS (VS5T)", codigo:"VS5T", serie:"GS — Gran Sport", anio:"1958–1961", pais:"Italia", flag:"🇮🇹", decada:"1950s", motor:"2T", cc:"150cc", pot:"~8 CV", vel:"~100 km/h", peso:"—", bastidor:"47351 – 127350", tag:"Deportivo", d:"Última y más numerosa serie de la GS150 clásica, con mejoras en carburador y culata para una entrega más suave."},
+{n:"Vespa 160 GS (VSB1T)", codigo:"VSB1T", serie:"GS — Gran Sport", anio:"1962–1964", pais:"Italia", flag:"🇮🇹", decada:"1960s", motor:"2T", cc:"160cc", pot:"~8,2 CV", vel:"~100 km/h", peso:"—", bastidor:"1001 – 61000", tag:"Deportivo", d:"Aumento de cilindrada a 160cc que dio continuidad a la saga GS tras el cierre de la serie 150 clásica."},
+
+// =================================================================
+// SERIE VSC/VSD/VSE — Super Sport 180 y Rally (Italia, 1964-1979)
+// =================================================================
+{n:"Vespa 180 SS (VSC1T) '64", codigo:"VSC1T", serie:"SS180/Rally — VSC/VSD/VSE", anio:"1964", pais:"Italia", flag:"🇮🇹", decada:"1960s", motor:"2T, puerto de pistón", cc:"180cc", pot:"~9,5 CV", vel:"105 km/h", peso:"—", bastidor:"1001 – 003120", tag:"Deportivo", d:"Una de las scooters más rápidas de su época, con línea cuadrada y componentes heredados del modelo GL, como el faro trapezoidal."},
+{n:"Vespa 180 SS (VSC1T) '65-'68", codigo:"VSC1T", serie:"SS180/Rally — VSC/VSD/VSE", anio:"1965–1968", pais:"Italia", flag:"🇮🇹", decada:"1960s", motor:"2T, puerto de pistón", cc:"180cc", pot:"~9,5 CV", vel:"105 km/h", peso:"—", bastidor:"003121 – 0036700", tag:"Deportivo", d:"Producción continuada de la 180 SS hasta 1968, último año que usó el puerto de pistón antes de pasar a válvula rotativa en la Rally."},
+{n:"Vespa 180 Rally (VSD1T) '68-'71", codigo:"VSD1T", serie:"SS180/Rally — VSC/VSD/VSE", anio:"1968–1971", pais:"Italia", flag:"🇮🇹", decada:"1970s", motor:"2T, válvula rotativa", cc:"180cc", pot:"~10 CV", vel:"~105 km/h", peso:"—", bastidor:"001001 – 0023348", tag:"Deportivo", d:"Sucesora de la SS, con motor y carrocería mejorados: faro redondo grande, sillín alargado y baúl de nuevo diseño."},
+{n:"Vespa 180 Rally (VSE1T)", codigo:"VSE1T", serie:"SS180/Rally — VSC/VSD/VSE", anio:"1972–1979", pais:"Italia", flag:"🇮🇹", decada:"1970s", motor:"2T, encendido electrónico", cc:"200cc", pot:"~12,35 CV", vel:"~110 km/h", peso:"—", bastidor:"1001 – 42275", tag:"Deportivo", d:"Salto a 200cc con encendido electrónico. Más de 41.700 unidades fabricadas, reconocible por las franjas adhesivas en bolsas y guardabarros."},
+
+// =================================================================
+// SERIE V (50/90/125 pequeña) — Vespino (Italia, 1963-1990)
+// =================================================================
+{n:"Vespa 50/N (V5A1T)", codigo:"V5A1T", serie:"V — 50cc pequeña", anio:"1963–1971", pais:"Italia", flag:"🇮🇹", decada:"1960s", motor:"2T, cilindro a 45°", cc:"50cc", pot:"—", vel:"40 km/h", peso:"—", bastidor:"1001 – 283299", tag:"Icónico", d:"El «vespino» original: en Italia no requería matrícula ni carné hasta los catorce años. Último diseño de Corradino D'Ascanio."},
+{n:"Vespa 50/5 (V5A1T)", codigo:"V5A1T", serie:"V — 50cc pequeña", anio:"1963–1990", pais:"Italia", flag:"🇮🇹", decada:"1960s", motor:"2T", cc:"50cc", pot:"—", vel:"40 km/h", peso:"—", bastidor:"1101 – 144061", tag:"Icónico", d:"Variante «5» de larguísima producción, en catálogo casi tres décadas en paralelo con el resto de la familia 50."},
+{n:"Vespa 50/L (V5A1T) '66-'67", codigo:"V5A1T", serie:"V — 50cc pequeña", anio:"1966–1967", pais:"Italia", flag:"🇮🇹", decada:"1960s", motor:"2T", cc:"50cc", pot:"—", vel:"—", peso:"—", bastidor:"500001 – 530932", tag:"Variante", d:"Versión «L» de acabado intermedio dentro de la extensa familia de la 50cc pequeña."},
+{n:"Vespa 50/L (V5A1T) '67-'70", codigo:"V5A1T", serie:"V — 50cc pequeña", anio:"1967–1970", pais:"Italia", flag:"🇮🇹", decada:"1960s", motor:"2T", cc:"50cc", pot:"—", vel:"—", peso:"—", bastidor:"540001 – 637063", tag:"Variante", d:"Continuación de la serie L con el nuevo logo hexagonal de Piaggio introducido en 1967."},
+{n:"Vespa 50/R (V5A1T)", codigo:"V5A1T", serie:"V — 50cc pequeña", anio:"1969–1983", pais:"Italia", flag:"🇮🇹", decada:"1970s", motor:"2T, 3 velocidades", cc:"50cc", pot:"—", vel:"—", peso:"—", bastidor:"700001 – 938761", tag:"Variante económica", d:"Versión más económica de la 50, con llantas de 9 pulgadas y cubierta de dirección del mismo color que la carrocería."},
+{n:"Vespa 50 Special (V5A2T)", codigo:"V5A2T", serie:"V — 50cc pequeña", anio:"1969–1972", pais:"Italia", flag:"🇮🇹", decada:"1970s", motor:"2T", cc:"50cc", pot:"—", vel:"—", peso:"—", bastidor:"1001 – 96013", tag:"Icónico", d:"La 50 Special, la más querida por los jóvenes de los 60 y 70, con acentos de color que le dan un aspecto más moderno."},
+{n:"Vespa 50 Elestart (V5A3T)", codigo:"V5A3T", serie:"V — 50cc pequeña", anio:"1969–1972", pais:"Italia", flag:"🇮🇹", decada:"1970s", motor:"2T, arranque eléctrico", cc:"50cc", pot:"—", vel:"—", peso:"—", bastidor:"1001 – 5708", tag:"Primicia técnica", d:"Misma estética que la Special pero con la novedad del arranque eléctrico."},
+{n:"Vespa 50 Special (V5B1T)", codigo:"V5B1T", serie:"V — 50cc pequeña", anio:"1972–1975", pais:"Italia", flag:"🇮🇹", decada:"1970s", motor:"2T", cc:"50cc", pot:"—", vel:"—", peso:"—", bastidor:"1001 – 95671", tag:"Icónico", d:"Segunda generación de la Special, con detalles estéticos renovados en manillar, faro y luz trasera."},
+{n:"Vespa 50 Elestart (V5B2T)", codigo:"V5B2T", serie:"V — 50cc pequeña", anio:"1972–1975", pais:"Italia", flag:"🇮🇹", decada:"1970s", motor:"2T, arranque eléctrico", cc:"50cc", pot:"—", vel:"—", peso:"—", bastidor:"1001 – 3667", tag:"Primicia técnica", d:"Segunda generación Elestart, en paralelo con la V5B1T."},
+{n:"Vespa 50 Special (V5B3T)", codigo:"V5B3T", serie:"V — 50cc pequeña", anio:"1975–1983", pais:"Italia", flag:"🇮🇹", decada:"1970s", motor:"2T", cc:"50cc", pot:"—", vel:"—", peso:"—", bastidor:"1101 – 565056", tag:"Icónico", d:"La versión de mayor tirada de toda la familia Special, con más de medio millón de unidades numeradas."},
+{n:"Vespa 50 Elestart (V5B4T)", codigo:"V5B4T", serie:"V — 50cc pequeña", anio:"1975–1976", pais:"Italia", flag:"🇮🇹", decada:"1970s", motor:"2T, arranque eléctrico", cc:"50cc", pot:"—", vel:"—", peso:"—", bastidor:"1101 – 1533", tag:"Primicia técnica", d:"Última revisión Elestart de la familia clásica, de tirada muy corta."},
+{n:"Vespa 50/S (V5SA1T)", codigo:"V5SA1T", serie:"V — 50cc pequeña", anio:"1963–1984", pais:"Italia", flag:"🇮🇹", decada:"1960s", motor:"2T", cc:"50cc", pot:"—", vel:"60 km/h", peso:"—", bastidor:"1101 – 130121+", tag:"Mercado exterior", d:"Versión «S» más rápida (60 km/h) pensada para mercados con normativa distinta a la italiana, en catálogo más de veinte años."},
+{n:"Vespa 50 Super Sprint (V5SS1T)", codigo:"V5SS1T", serie:"V — 50cc pequeña", anio:"1965–1971", pais:"Italia", flag:"🇮🇹", decada:"1960s", motor:"2T", cc:"50cc", pot:"—", vel:"—", peso:"—", bastidor:"1001 – 3525", tag:"Deportivo", d:"Versión de 50cc de la elegante Super Sprint, preparada especialmente para mercados suizo y alemán."},
+{n:"Vespa 50 Sprinter (V5SS2T)", codigo:"V5SS2T", serie:"V — 50cc pequeña", anio:"1971–1979", pais:"Italia", flag:"🇮🇹", decada:"1970s", motor:"2T", cc:"50cc", pot:"—", vel:"—", peso:"—", bastidor:"4001 – 10579", tag:"Deportivo", d:"Evolución de la Super Sprint 50 renombrada Sprinter, con acabados deportivos actualizados."},
+{n:"Vespa 90 (V9A1T)", codigo:"V9A1T", serie:"V — 90cc", anio:"1963–1984", pais:"Italia", flag:"🇮🇹", decada:"1960s", motor:"2T", cc:"90cc", pot:"—", vel:"—", peso:"—", bastidor:"1001 – 300026", tag:"Variante", d:"Compartía muchos componentes con la 50 pero con matrícula obligatoria por su cilindrada. Popular entre quienes llevaban pasajero habitualmente."},
+{n:"Vespa 90 Super Sprint (V9SS1T)", codigo:"V9SS1T", serie:"V — 90cc", anio:"1965–1971", pais:"Italia", flag:"🇮🇹", decada:"1960s", motor:"2T", cc:"90cc", pot:"—", vel:"—", peso:"—", bastidor:"1001 – 6309", tag:"Deportivo", d:"Considerada una de las Vespa más elegantes de la historia por su diseño agresivo y portaequipajes adicional."},
+{n:"Vespa 90 Racer (V9SS2T)", codigo:"V9SS2T", serie:"V — 90cc", anio:"1971–1974", pais:"Italia", flag:"🇮🇹", decada:"1970s", motor:"2T", cc:"90cc", pot:"—", vel:"—", peso:"—", bastidor:"7001 – 10516", tag:"Deportivo", d:"Renombrada «Racer», cierre de la familia deportiva de 90cc con acabados actualizados a los 70."},
+{n:"Vespa 100 (V9B1T) '78-'83", codigo:"V9B1T", serie:"V — 100cc", anio:"1978–1983", pais:"Italia (mercado EE. UU.)", flag:"🇺🇸", decada:"1970s", motor:"2T", cc:"100cc", pot:"—", vel:"—", peso:"—", bastidor:"1101 – 28904", tag:"Mercado exterior", d:"Derivada de la 90, se creó para cumplir la legislación de ciclomotores del mercado estadounidense."},
+{n:"Vespa 100 (V9B1T) '83-'90", codigo:"V9B1T", serie:"V — 100cc", anio:"1983–1990", pais:"Italia (export)", flag:"🌍", decada:"1980s", motor:"2T", cc:"100cc", pot:"—", vel:"—", peso:"—", bastidor:"50001 – 107758", tag:"Mercado exterior", d:"Segunda tirada de la 100cc de exportación, coexistiendo con el resto de la gama pequeña de los 80."},
+{n:"Vespa 125 Primavera (VMA1T)", codigo:"VMA1T", serie:"VMA/VMB — Primavera", anio:"1965–1967", pais:"Italia", flag:"🇮🇹", decada:"1960s", motor:"2T", cc:"125cc", pot:"—", vel:"—", peso:"—", bastidor:"1001 – 18100", tag:"Icónico", d:"Primera versión de la Primavera, con chasis más largo que facilitaba llevar pasajero."},
+{n:"Vespa 125 Primavera (VMA2T)", codigo:"VMA2T", serie:"VMA/VMB — Primavera", anio:"1967–1983", pais:"Italia", flag:"🇮🇹", decada:"1960s", motor:"2T", cc:"125cc", pot:"—", vel:"—", peso:"—", bastidor:"20001 – 240329", tag:"Icónico", d:"La versión de mayor éxito y tirada de la Primavera clásica, con más de 220.000 unidades numeradas."},
+{n:"Vespa Primavera ET 3 (VMB1T)", codigo:"VMB1T", serie:"VMA/VMB — Primavera", anio:"1976–1990", pais:"Italia", flag:"🇮🇹", decada:"1970s", motor:"2T, encendido electrónico", cc:"125cc", pot:"—", vel:"—", peso:"—", bastidor:"1101 – 148923", tag:"Deportivo", d:"Versión deportiva con cilindro de tercera transferencia (ET3) y silenciador nuevo, en catálogo durante 14 años."},
+
+// =================================================================
+// SERIE PK — 50/80/100/125cc «línea moderna» (Italia, 1982-1990)
+// =================================================================
+{n:"Vespa PK 50", codigo:"V5X1T", serie:"PK — 50/80/100/125", anio:"1982–1988", pais:"Italia", flag:"🇮🇹", decada:"1980s", motor:"2T", cc:"50cc", pot:"—", vel:"—", peso:"—", bastidor:"1101 – 17512", tag:"Icónico", d:"Primera Vespa con la carrocería de líneas angulosas de la línea PK, sustituyendo a la familia clásica de 50cc."},
+{n:"Vespa PK 50 S", codigo:"V5X2T", serie:"PK — 50/80/100/125", anio:"1982–1986", pais:"Italia", flag:"🇮🇹", decada:"1980s", motor:"2T", cc:"50cc", pot:"—", vel:"60 km/h", peso:"—", bastidor:"1101 – 221578", tag:"Mercado exterior", d:"Versión «S» más rápida de la PK50, la de mayor tirada de toda la familia PK50."},
+{n:"Vespa PK 50 S Elestart", codigo:"V5X2T", serie:"PK — 50/80/100/125", anio:"1983–1986", pais:"Italia", flag:"🇮🇹", decada:"1980s", motor:"2T, arranque eléctrico", cc:"50cc", pot:"—", vel:"—", peso:"—", bastidor:"3000001 – 3009325", tag:"Primicia técnica", d:"Versión con arranque eléctrico de la PK50 S."},
+{n:"Vespa PK 50 SS", codigo:"V5S1T", serie:"PK — 50/80/100/125", anio:"1983–1987", pais:"Italia", flag:"🇮🇹", decada:"1980s", motor:"2T", cc:"50cc", pot:"—", vel:"—", peso:"—", bastidor:"1101 – 7172", tag:"Deportivo", d:"Acabado deportivo dentro de la familia PK50, de tirada más corta que la S estándar."},
+{n:"Vespa PK 50 S Automática", codigo:"VA51T", serie:"PK — 50/80/100/125", anio:"1984", pais:"Italia", flag:"🇮🇹", decada:"1980s", motor:"2T automático", cc:"50cc", pot:"—", vel:"—", peso:"—", bastidor:"1101 – 1352", tag:"Primicia técnica", d:"Primera Vespa 50 con transmisión completamente automática."},
+{n:"Vespa PK 50 XL", codigo:"V5X5T", serie:"PK — 50/80/100/125", anio:"1985–1990", pais:"Italia", flag:"🇮🇹", decada:"1980s", motor:"2T", cc:"50cc", pot:"—", vel:"—", peso:"—", bastidor:"1101 – 193519", tag:"Icónico", d:"Rediseño «XL» de la PK50, con líneas más angulosas y mayor confort de conducción."},
+{n:"Vespa PK 50 XL Plurimatic", codigo:"VA52T", serie:"PK — 50/80/100/125", anio:"1986–1989", pais:"Italia", flag:"🇮🇹", decada:"1980s", motor:"2T automático «Plurimatic»", cc:"50cc", pot:"—", vel:"—", peso:"—", bastidor:"1101 – 4989", tag:"Primicia técnica", d:"Sistema de transmisión automática Plurimatic aplicado a la carrocería XL."},
+{n:"Vespa PK 50 XLS", codigo:"V5S2T", serie:"PK — 50/80/100/125", anio:"1986–1990", pais:"Italia", flag:"🇮🇹", decada:"1980s", motor:"2T", cc:"50cc", pot:"—", vel:"—", peso:"—", bastidor:"001101 – 016464", tag:"Deportivo", d:"Versión deportiva de la XL, con detalles de acabado exclusivos."},
+{n:"Vespa PK 50 XL Rush", codigo:"V5X4T", serie:"PK — 50/80/100/125", anio:"1988–1990", pais:"Italia", flag:"🇮🇹", decada:"1980s", motor:"2T", cc:"50cc", pot:"—", vel:"—", peso:"—", bastidor:"1101 – 62170", tag:"Deportivo", d:"Edición «Rush» de la PK50 XL, de las últimas variantes antes del cierre de la familia PK."},
+{n:"Vespa 50 N (línea PK)", codigo:"V5X5T", serie:"PK — 50/80/100/125", anio:"1989–1990", pais:"Italia", flag:"🇮🇹", decada:"1980s", motor:"2T", cc:"50cc", pot:"—", vel:"—", peso:"—", bastidor:"1101 – 44579", tag:"Icónico", d:"Renombrada simplemente «50N», cierre de la larga saga de 50cc de línea PK antes de la transición a la Sfera/Scatto."},
+{n:"Vespa 50 (VSN1T)", codigo:"VSN1T", serie:"PK — 50/80/100/125", anio:"1990", pais:"Italia", flag:"🇮🇹", decada:"1990s", motor:"2T", cc:"50cc", pot:"—", vel:"—", peso:"—", bastidor:"1101 – 57991", tag:"Transición", d:"Puente entre la línea PK y la nueva generación de scooters automáticos de los 90."},
+{n:"Vespa 50 Automatic (V5P2T)", codigo:"V5P2T", serie:"PK — 50/80/100/125", anio:"1990", pais:"Italia", flag:"🇮🇹", decada:"1990s", motor:"2T automático", cc:"50cc", pot:"—", vel:"—", peso:"—", bastidor:"1101 – 9064", tag:"Primicia técnica", d:"Versión automática de cierre de la familia clásica de 50cc antes de la llegada de la Sfera."},
+{n:"Vespa PK 80 S", codigo:"V8X5T", serie:"PK — 50/80/100/125", anio:"1982–1986", pais:"Italia", flag:"🇮🇹", decada:"1980s", motor:"2T", cc:"80cc", pot:"—", vel:"—", peso:"—", bastidor:"1101 – 6214", tag:"Variante", d:"Cilindrada intermedia de 80cc dentro de la familia PK, pensada para mercados con normativa específica."},
+{n:"Vespa PK 100 S", codigo:"V9X1T", serie:"PK — 50/80/100/125", anio:"1982–1990", pais:"Italia", flag:"🇮🇹", decada:"1980s", motor:"2T", cc:"100cc", pot:"—", vel:"—", peso:"—", bastidor:"1101 – 69175", tag:"Variante", d:"Versión de 100cc de la línea PK, la de mayor tirada de esta cilindrada."},
+{n:"Vespa PK 100 XL", codigo:"V9X2T", serie:"PK — 50/80/100/125", anio:"1986–1990", pais:"Italia", flag:"🇮🇹", decada:"1980s", motor:"2T", cc:"100cc", pot:"—", vel:"—", peso:"—", bastidor:"1101 – 2197", tag:"Variante", d:"Carrocería XL aplicada a la cilindrada de 100cc, de tirada muy corta."},
+{n:"Vespa PK 125", codigo:"VMX1T", serie:"PK — 50/80/100/125", anio:"1982–1985", pais:"Italia", flag:"🇮🇹", decada:"1980s", motor:"2T", cc:"125cc", pot:"—", vel:"—", peso:"—", bastidor:"1101 – 8378", tag:"Icónico", d:"Versión de 125cc de la línea PK, sustituyendo a la Primavera ET3 como scooter de acceso de mayor cilindrada."},
+{n:"Vespa PK 125 S", codigo:"VMX5T", serie:"PK — 50/80/100/125", anio:"1982–1986", pais:"Italia", flag:"🇮🇹", decada:"1980s", motor:"2T", cc:"125cc", pot:"—", vel:"—", peso:"—", bastidor:"1101 – 62606", tag:"Icónico", d:"La versión de mayor producción de la familia PK125."},
+{n:"Vespa PK 125 ETS", codigo:"VMS1T", serie:"PK — 50/80/100/125", anio:"1984–1985", pais:"Italia", flag:"🇮🇹", decada:"1980s", motor:"2T", cc:"125cc", pot:"—", vel:"—", peso:"—", bastidor:"1101 – 12811", tag:"Deportivo", d:"Versión deportiva de la PK125, con manillar más compacto, sillín con toque de cola y cigüeñal reforzado."},
+{n:"Vespa PK 125 XL", codigo:"VMX6T", serie:"PK — 50/80/100/125", anio:"1986–1990", pais:"Italia", flag:"🇮🇹", decada:"1980s", motor:"2T", cc:"125cc", pot:"—", vel:"—", peso:"—", bastidor:"1001 – 54751", tag:"Icónico", d:"Rediseño XL de la 125, con carrocería más angulosa y mayor confort."},
+{n:"Vespa PK 125 XL Plurimatic", codigo:"VM1T", serie:"PK — 50/80/100/125", anio:"1987–1990", pais:"Italia", flag:"🇮🇹", decada:"1980s", motor:"2T automático", cc:"125cc", pot:"—", vel:"—", peso:"—", bastidor:"1101 – 20103", tag:"Primicia técnica", d:"La primera Vespa 125 con transmisión automática, uno de los proyectos más innovadores de la línea PK."},
+{n:"Vespa PK 125 Automatic", codigo:"VM2T", serie:"PK — 50/80/100/125", anio:"1990", pais:"Italia", flag:"🇮🇹", decada:"1990s", motor:"2T automático", cc:"125cc", pot:"—", vel:"—", peso:"—", bastidor:"1101 – 1556", tag:"Primicia técnica", d:"Cierre de la familia PK125 automática antes de la transición a la línea ET/Sfera."},
+
+// =================================================================
+// SERIE P/PX — la mítica PX, Cosa y T5 (Italia, 1977-2010s)
+// =================================================================
+{n:"Vespa P 80 / P 80 E", codigo:"V8A1T", serie:"PX/P — Serie PX", anio:"1980–1983", pais:"Italia", flag:"🇮🇹", decada:"1980s", motor:"2T", cc:"80cc", pot:"—", vel:"—", peso:"—", bastidor:"1001 – 9923", tag:"Variante", d:"Cilindrada de acceso de 80cc dentro de la familia P, con la nueva carrocería cuadrada estrenada por la P125X."},
+{n:"Vespa P 80 X / P 80 XE", codigo:"V8X1T", serie:"PX/P — Serie PX", anio:"1981–1983", pais:"Italia", flag:"🇮🇹", decada:"1980s", motor:"2T", cc:"80cc", pot:"—", vel:"—", peso:"—", bastidor:"1101 – 45710", tag:"Variante", d:"Versión «X» de la P80, con mejoras de acabado sobre la P80 original."},
+{n:"Vespa P 125 X", codigo:"VNX1T", serie:"PX/P — Serie PX", anio:"1977–1982", pais:"Italia", flag:"🇮🇹", decada:"1970s", motor:"2T", cc:"125cc", pot:"—", vel:"—", peso:"—", bastidor:"1101 – 198248", tag:"Icónico", d:"Presentada en el Salón de Milán de 1977, dio origen a la mítica serie PX: líneas cuadradas, chasis mayor y suspensión delantera con amortiguador telescópico."},
+{n:"Vespa PX 125 E '81-'84", codigo:"VNX2T", serie:"PX/P — Serie PX", anio:"1981–1984", pais:"Italia", flag:"🇮🇹", decada:"1980s", motor:"2T", cc:"125cc", pot:"—", vel:"—", peso:"—", bastidor:"1101 – 135966", tag:"Icónico", d:"Primera revisión «E» de la PX125 con mejoras de inyección de aire y consumo."},
+{n:"Vespa PX 125 E '83-'93", codigo:"VNX2T", serie:"PX/P — Serie PX", anio:"1983–1993", pais:"Italia", flag:"🇮🇹", decada:"1980s", motor:"2T", cc:"125cc", pot:"—", vel:"—", peso:"—", bastidor:"135402 – 284846", tag:"Icónico", d:"La versión de la PX125 de mayor tirada, en catálogo durante toda una década."},
+{n:"Vespa T5 125", codigo:"VNX5T", serie:"PX/P — Serie PX", anio:"1985–1990", pais:"Italia", flag:"🇮🇹", decada:"1980s", motor:"2T, 5 lumbreras de admisión", cc:"125cc", pot:"—", vel:"—", peso:"—", bastidor:"1101 – 37161", tag:"Deportivo", d:"Línea agresiva con spoiler, parabrisas y cuentarrevoluciones digital. Piaggio eligió al piloto de F1 Nelson Piquet como imagen de la campaña."},
+{n:"Vespa T5 Elestart 125", codigo:"VNX5T", serie:"PX/P — Serie PX", anio:"1985–1990", pais:"Italia", flag:"🇮🇹", decada:"1980s", motor:"2T, arranque eléctrico", cc:"125cc", pot:"—", vel:"—", peso:"—", bastidor:"3000001 – 3005013", tag:"Primicia técnica", d:"Versión con arranque eléctrico de la T5, muy buscada hoy por coleccionistas."},
+{n:"Vespa P 150 S", codigo:"VBX1T", serie:"PX/P — Serie PX", anio:"1978–1990", pais:"Italia", flag:"🇮🇹", decada:"1970s", motor:"2T", cc:"150cc", pot:"—", vel:"—", peso:"—", bastidor:"1101 – 299155", tag:"Icónico", d:"Cilindrada intermedia de la familia P, con más de doce años de producción ininterrumpida."},
+{n:"Vespa P 150 X", codigo:"VLX1T", serie:"PX/P — Serie PX", anio:"1978–1981", pais:"Italia", flag:"🇮🇹", decada:"1970s", motor:"2T", cc:"150cc", pot:"—", vel:"—", peso:"—", bastidor:"1101 – 346402", tag:"Icónico", d:"Versión «X» de acceso de la 150, hermana de la P125X con la misma carrocería cuadrada."},
+{n:"Vespa PX 150 E", codigo:"VLX1T", serie:"PX/P — Serie PX", anio:"1981–1985", pais:"Italia", flag:"🇮🇹", decada:"1980s", motor:"2T", cc:"150cc", pot:"—", vel:"—", peso:"—", bastidor:"346403 – 552410", tag:"Icónico", d:"Actualización «E» de la 150, compartiendo numeración de bastidor con la P150X."},
+{n:"Vespa Cosa 150", codigo:"VLR1T", serie:"Cosa", anio:"1987–1990", pais:"Italia", flag:"🇮🇹", decada:"1980s", motor:"2T", cc:"150cc", pot:"—", vel:"—", peso:"—", bastidor:"1101 – 4308", tag:"Icónico", d:"Rediseño de líneas más angulosas de la familia PX, con mejor agarre y frenado integral."},
+{n:"Vespa Cosa 150 Elestart", codigo:"VLR1T", serie:"Cosa", anio:"1987–1990", pais:"Italia", flag:"🇮🇹", decada:"1980s", motor:"2T, arranque eléctrico", cc:"150cc", pot:"—", vel:"—", peso:"—", bastidor:"3000001 – 3009413", tag:"Primicia técnica", d:"Versión con arranque eléctrico de la Cosa 150."},
+{n:"Vespa P 200 X", codigo:"VSX1T", serie:"PX/P — Serie PX", anio:"1977", pais:"Italia", flag:"🇮🇹", decada:"1970s", motor:"2T", cc:"200cc", pot:"—", vel:"—", peso:"—", bastidor:"100 – 1700", tag:"Icónico", d:"Primera y muy escasa tirada de la 200cc de la familia P, previa a la P200E."},
+{n:"Vespa P 200 E", codigo:"VSX1T", serie:"PX/P — Serie PX", anio:"1977–1982", pais:"Italia", flag:"🇮🇹", decada:"1970s", motor:"2T", cc:"200cc", pot:"~9,5 CV", vel:"—", peso:"—", bastidor:"1101 – 160000", tag:"Icónico", d:"La 200cc de la familia P alcanzó gran producción, siendo la cilindrada tope de la gama."},
+{n:"Vespa PX 200 E", codigo:"VSX1T", serie:"PX/P — Serie PX", anio:"1982–1986", pais:"Italia", flag:"🇮🇹", decada:"1980s", motor:"2T", cc:"200cc", pot:"~9,5 CV", vel:"—", peso:"—", bastidor:"160001 – 195545", tag:"Icónico", d:"Actualización final de la PX200 clásica antes de la llegada de la Cosa 200."},
+{n:"Vespa PX 200 E Iris", codigo:"VSX1T (Iris)", serie:"PX/P — Serie PX", anio:"1984–2008", pais:"España", flag:"🇪🇸", decada:"1980s", motor:"2T, motores 73M / 76M / 77M", cc:"200cc", pot:"~9,5 CV", vel:"—", peso:"—", bastidor:"—", tag:"Fabricación bajo licencia", d:"Variante de la PX200E fabricada por Motovespa para el mercado español bajo el nombre comercial «Iris», con anagramas y detalles de decoración propios distintos a la versión italiana. Se mantuvo en catálogo español durante más de veinte años."},
+{n:"Vespa Cosa 200", codigo:"VSR1T", serie:"Cosa", anio:"1988–1990", pais:"Italia", flag:"🇮🇹", decada:"1980s", motor:"2T", cc:"200cc", pot:"—", vel:"—", peso:"—", bastidor:"1101 en adelante", tag:"Icónico", d:"Versión de mayor cilindrada de la Cosa, con el rendimiento más alto entre las scooters del mercado en su momento."},
+{n:"Vespa PX 125/150/200 (relanzamiento)", codigo:"PX (moderna)", serie:"PX/P — Serie PX", anio:"desde 2010", pais:"Italia", flag:"🇮🇹", decada:"2010s", motor:"2T", cc:"125 / 150 / 200cc", pot:"—", vel:"—", peso:"—", bastidor:"—", tag:"Reedición", d:"Piaggio relanzó la PX de dos tiempos tras el paréntesis en que solo LML la fabricaba, manteniendo vivo el diseño de 1977."},
+
+// =================================================================
+// LICENCIAS INTERNACIONALES — fabricación fuera de Italia
+// =================================================================
+{n:"Hoffmann-Vespa", codigo:"—", serie:"Licencias internacionales", anio:"desde 1950", pais:"Alemania", flag:"🇩🇪", decada:"1950s", motor:"2T (licencia Piaggio)", cc:"125cc", pot:"—", vel:"—", peso:"—", bastidor:"—", tag:"Fabricación bajo licencia", d:"Primera fabricación de la Vespa fuera de Italia, a cargo de Hoffmann Werke en Lintorf. Marcó el inicio de la expansión internacional de la marca."},
+{n:"ACMA Vespa", codigo:"—", serie:"Licencias internacionales", anio:"desde 1951", pais:"Francia", flag:"🇫🇷", decada:"1950s", motor:"2T (licencia Piaggio)", cc:"125–150cc", pot:"—", vel:"—", peso:"—", bastidor:"—", tag:"Fabricación bajo licencia", d:"ACMA produjo la Vespa en Francia bajo licencia, incluyendo más adelante la singular versión militar TAP."},
+{n:"Douglas Vespa", codigo:"—", serie:"Licencias internacionales", anio:"desde 1951", pais:"Reino Unido", flag:"🇬🇧", decada:"1950s", motor:"2T (licencia Piaggio)", cc:"125cc", pot:"—", vel:"—", peso:"—", bastidor:"—", tag:"Fabricación bajo licencia", d:"El fabricante de motocicletas Douglas, en Bristol, obtuvo la licencia británica y produjo Vespas adaptadas al mercado del Reino Unido."},
+{n:"Vespa Allstate", codigo:"—", serie:"Licencias internacionales", anio:"desde 1951", pais:"Estados Unidos", flag:"🇺🇸", decada:"1950s", motor:"2T", cc:"125cc", pot:"—", vel:"—", peso:"—", bastidor:"—", tag:"Mercado exclusivo", d:"Comercializada en EE. UU. a través del catálogo de la cadena Sears bajo la marca «Allstate». Casi idéntica a la VNA/VNB pero con horquilla delantera simplificada."},
+{n:"Motovespa (España)", codigo:"—", serie:"Licencias internacionales", anio:"desde 1953", pais:"España", flag:"🇪🇸", decada:"1950s", motor:"2T (licencia Piaggio)", cc:"125–200cc", pot:"—", vel:"—", peso:"—", bastidor:"—", tag:"Fabricación bajo licencia", d:"Fabricada en la planta de Moto Vespa S.A. en Ciudad Lineal, Madrid, con componentes propios distintos a los italianos. Produjo Vespa y Vespino durante 51 años, hasta 2003."},
+{n:"Bajaj Vespa", codigo:"—", serie:"Licencias internacionales", anio:"desde 1960", pais:"India", flag:"🇮🇳", decada:"1960s", motor:"2T (licencia Piaggio)", cc:"150cc", pot:"—", vel:"—", peso:"—", bastidor:"—", tag:"Fabricación bajo licencia", d:"Bajaj Auto inició la fabricación de Vespa bajo licencia en India, germen de uno de los mayores mercados de scooters del mundo."},
+{n:"LML Vespa PX 100 E", codigo:"—", serie:"Licencias internacionales", anio:"1982", pais:"India", flag:"🇮🇳", decada:"1980s", motor:"2T (licencia Piaggio)", cc:"100cc", pot:"—", vel:"—", peso:"—", bastidor:"—", tag:"Fabricación bajo licencia", d:"LML (Lohia Machinery Limited), con sede en Kanpur, inició la producción bajo licencia de Piaggio con esta PX 100 E."},
+{n:"LML Star", codigo:"—", serie:"Licencias internacionales", anio:"desde 2010", pais:"India", flag:"🇮🇳", decada:"2010s", motor:"2T / 4T", cc:"125 / 150 / 200cc", pot:"—", vel:"—", peso:"—", bastidor:"—", tag:"Heredera de la PX", d:"Tras el fin de la licencia con Piaggio, LML desarrolló su propio modelo inspirado en la PX, con chasis de chapa heredado y motores propios."},
+{n:"Piaggio Vietnam (Vĩnh Phúc)", codigo:"—", serie:"Licencias internacionales", anio:"desde 2009", pais:"Vietnam", flag:"🇻🇳", decada:"2000s", motor:"4T", cc:"variable", pot:"—", vel:"—", peso:"—", bastidor:"—", tag:"Fabricación actual", d:"Planta abierta por Piaggio para abastecer el mercado asiático, donde hoy se ensamblan modelos de la familia GTS."},
+
+// =================================================================
+// MILITAR Y PIEZAS ESPECIALES
+// =================================================================
+{n:"Vespa 150 TAP", codigo:"—", serie:"Militar y piezas especiales", anio:"1956–1959", pais:"Francia", flag:"🇫🇷", decada:"1950s", motor:"2T", cc:"150cc", pot:"—", vel:"60 km/h", peso:"115 kg", bastidor:"—", tag:"Militar", d:"Encargada por el Ministerio de Defensa francés para paracaidistas. Podía lanzarse en paracaídas e iba armada con un cañón sin retroceso de 75 mm. Unas 600 unidades."},
+{n:"Vespa Torpedo", codigo:"—", serie:"Militar y piezas especiales", anio:"1951", pais:"Italia", flag:"🇮🇹", decada:"1950s", motor:"2 pistones opuestos", cc:"—", pot:"17,2 CV a 9.500 rpm", vel:"171,1 km/h", peso:"—", bastidor:"—", tag:"Récord", d:"Diseñada por D'Ascanio, batió el récord de velocidad en el kilómetro lanzado en la autopista Roma-Ostia."},
+{n:"Vespa Montlhéry", codigo:"—", serie:"Militar y piezas especiales", anio:"1950", pais:"Italia", flag:"🇮🇹", decada:"1950s", motor:"2T preparado", cc:"125cc", pot:"—", vel:"124–130 km/h (media)", peso:"—", bastidor:"—", tag:"Récord", d:"Batió récords mundiales de velocidad en las distancias de 100 millas, 500 millas y 1.000 km en el circuito de Montlhéry."},
+{n:"Vespa Dalí", codigo:"—", serie:"Militar y piezas especiales", anio:"1962", pais:"España", flag:"🇪🇸", decada:"1960s", motor:"2T", cc:"—", pot:"—", vel:"—", peso:"—", bastidor:"—", tag:"Pieza única", d:"Unidad decorada personalmente por Salvador Dalí, firmada junto al nombre de su esposa Gala. Hoy en el Museo Piaggio."},
+{n:"Vespa 400", codigo:"—", serie:"Militar y piezas especiales", anio:"1957–1961", pais:"Italia", flag:"🇮🇹", decada:"1950s", motor:"2T", cc:"394cc", pot:"—", vel:"—", peso:"—", bastidor:"—", tag:"Microcoche", d:"La única incursión de Vespa en las cuatro ruedas: un microcoche precursor del segmento de utilitarios económicos."},
+
+// =================================================================
+// ERA MODERNA — ET, LX, GTS, 946, Elettrica (Italia, 1996-presente)
+// =================================================================
+{n:"Vespa ET 2 / ET 4", codigo:"—", serie:"Moderna 1996+", anio:"desde 1996", pais:"Italia", flag:"🇮🇹", decada:"1990s", motor:"2T (ET2) / 4T (ET4)", cc:"125 / 150cc", pot:"—", vel:"—", peso:"—", bastidor:"—", tag:"Icónico", d:"La nueva generación con la que Vespa entra en el tercer milenio, con inyección directa que redujo consumo hasta -30% y emisiones hasta -70%."},
+{n:"Vespa Ferrari ET 4 150", codigo:"—", serie:"Moderna 1996+", anio:"2001", pais:"Italia", flag:"🇮🇹", decada:"2000s", motor:"4T", cc:"150cc", pot:"—", vel:"—", peso:"—", bastidor:"—", tag:"Edición especial", d:"Homenaje al título de Fórmula 1 de Ferrari en 2000, con librea roja y sillín de piel."},
+{n:"Vespa Granturismo (GT 200)", codigo:"—", serie:"Moderna 1996+", anio:"2003", pais:"Italia", flag:"🇮🇹", decada:"2000s", motor:"4T", cc:"200cc", pot:"—", vel:"—", peso:"—", bastidor:"—", tag:"Icónico", d:"Inicio de la familia de bastidor grande GT/GTS/GTV moderna."},
+{n:"Vespa LX", codigo:"—", serie:"Moderna 1996+", anio:"desde 2005", pais:"Italia", flag:"🇮🇹", decada:"2000s", motor:"2T / 4T", cc:"50 / 125 / 150cc", pot:"—", vel:"—", peso:"—", bastidor:"—", tag:"Icónico", d:"Sucesora de la ET, recuperando la línea de bastidor pequeño con tecnología moderna."},
+{n:"Vespa GTS 250 IE", codigo:"—", serie:"Moderna 1996+", anio:"2005", pais:"Italia", flag:"🇮🇹", decada:"2000s", motor:"4T, inyección electrónica", cc:"250cc", pot:"—", vel:"—", peso:"—", bastidor:"—", tag:"Icónico", d:"Homenaje, 50 años después, a la GS de 1955: la Vespa más potente y tecnológicamente avanzada de su momento."},
+{n:"Vespa GTV / LXV", codigo:"—", serie:"Moderna 1996+", anio:"2006", pais:"Italia", flag:"🇮🇹", decada:"2000s", motor:"4T", cc:"125 / 150 / 250cc", pot:"—", vel:"—", peso:"—", bastidor:"—", tag:"Retro", d:"Reinterpretan el estilo de los años 50 y 60: la GTV con faro sobre el guardabarros como el prototipo original."},
+{n:"Vespa GT 60°", codigo:"—", serie:"Moderna 1996+", anio:"2006", pais:"Italia", flag:"🇮🇹", decada:"2000s", motor:"4T", cc:"250cc", pot:"—", vel:"—", peso:"—", bastidor:"—", tag:"Edición limitada", d:"Solo 999 unidades para celebrar el 60 aniversario de la marca, con estética vintage."},
+{n:"Vespa GTS 300 Super", codigo:"—", serie:"Moderna 1996+", anio:"2008", pais:"Italia", flag:"🇮🇹", decada:"2000s", motor:"4T", cc:"278cc", pot:"—", vel:"—", peso:"—", bastidor:"—", tag:"Icónico", d:"Lleva la elegancia de Vespa a la clase de más de 250cc, con personalidad claramente deportiva."},
+{n:"Vespa S 50 / LX 50 4v", codigo:"—", serie:"Moderna 1996+", anio:"2009", pais:"Italia", flag:"🇮🇹", decada:"2010s", motor:"4T, 4 válvulas", cc:"50cc", pot:"4,35 CV", vel:"—", peso:"—", bastidor:"—", tag:"Primicia técnica", d:"El cuatro tiempos de 50cc más potente del mercado en su lanzamiento."},
+{n:"Vespa 946", codigo:"—", serie:"Moderna 1996+", anio:"2013", pais:"Italia", flag:"🇮🇹", decada:"2010s", motor:"4T", cc:"125cc", pot:"—", vel:"—", peso:"—", bastidor:"—", tag:"Alta gama", d:"El modelo más exclusivo de la gama, con carrocería de aluminio. Su nombre rinde homenaje al año del prototipo original."},
+{n:"Vespa Primavera (moderna)", codigo:"—", serie:"Moderna 1996+", anio:"desde 2014", pais:"Italia", flag:"🇮🇹", decada:"2010s", motor:"4T", cc:"50 / 125 / 150cc", pot:"10,6 CV (125)", vel:"~100 km/h", peso:"—", bastidor:"—", tag:"Icónico", d:"Recupera el nombre de la Primavera de 1967 con faro rectangular y sillín rediseñado."},
+{n:"Vespa Sprint 125", codigo:"—", serie:"Moderna 1996+", anio:"desde 2014", pais:"Italia", flag:"🇮🇹", decada:"2010s", motor:"4T", cc:"125 / 150cc", pot:"11 CV (125)", vel:">90 km/h", peso:"—", bastidor:"—", tag:"Deportivo", d:"Recoge el espíritu deportivo de las Vespa de los 60/70, con líneas más afiladas que la Primavera."},
+{n:"Vespa GTS ABS/ASR", codigo:"—", serie:"Moderna 1996+", anio:"2014", pais:"Italia", flag:"🇮🇹", decada:"2010s", motor:"4T", cc:"125 / 300cc", pot:"—", vel:"—", peso:"—", bastidor:"—", tag:"Primicia técnica", d:"Incorporó ABS de dos canales y control de tracción ASR."},
+{n:"Vespa 946 Emporio Armani", codigo:"—", serie:"Moderna 1996+", anio:"2015", pais:"Italia", flag:"🇮🇹", decada:"2010s", motor:"4T", cc:"125cc", pot:"—", vel:"—", peso:"—", bastidor:"—", tag:"Colaboración", d:"Edición firmada por Giorgio Armani, con paleta de grises exclusiva y llantas de 12 pulgadas."},
+{n:"Vespa Aniversario 70º", codigo:"—", serie:"Moderna 1996+", anio:"2016", pais:"Italia", flag:"🇮🇹", decada:"2010s", motor:"4T", cc:"125 / 300cc", pot:"—", vel:"—", peso:"—", bastidor:"—", tag:"Edición especial", d:"Serie conmemorativa que abarcó Primavera, GTS y la atemporal PX."},
+{n:"Vespa 946 RED", codigo:"—", serie:"Moderna 1996+", anio:"2018", pais:"Italia", flag:"🇮🇹", decada:"2010s", motor:"4T, 3 válvulas", cc:"125cc", pot:"—", vel:"—", peso:"—", bastidor:"—", tag:"Colaboración solidaria", d:"Colaboración con (RED) contra el sida, la tuberculosis y la malaria, vestida íntegramente de rojo."},
+{n:"Vespa Elettrica", codigo:"—", serie:"Eléctrica", anio:"2018", pais:"Italia", flag:"🇮🇹", decada:"2010s", motor:"Eléctrico, batería de litio", cc:"—", pot:"—", vel:"—", peso:"—", bastidor:"—", tag:"Eléctrico", d:"El primer modelo totalmente eléctrico de Vespa, con hasta 100 km de autonomía."},
+{n:"Vespa 946 10º Aniversario", codigo:"—", serie:"Moderna 1996+", anio:"2023", pais:"Italia", flag:"🇮🇹", decada:"2020s", motor:"4T, 3 válvulas", cc:"125cc", pot:"—", vel:"—", peso:"—", bastidor:"—", tag:"Alta gama", d:"El modelo más exquisito y caro de toda la familia Vespa, con carrocería y manillar en aluminio."},
+{n:"Vespa GTS 125 SuperSport", codigo:"—", serie:"Moderna 1996+", anio:"2025", pais:"Italia", flag:"🇮🇹", decada:"2020s", motor:"4T, i-Get, Start&Go", cc:"125cc", pot:"14 CV", vel:"—", peso:"—", bastidor:"—", tag:"Deportivo", d:"Mecánica i-Get refrigerada por líquido con parada y arranque automáticos, control de tracción y ABS de serie."},
+{n:"Vespa GTS 310 HPE", codigo:"—", serie:"Moderna 1996+", anio:"2025", pais:"Italia", flag:"🇮🇹", decada:"2020s", motor:"4T, refrigeración líquida", cc:"310cc", pot:"—", vel:"120–130 km/h", peso:"—", bastidor:"—", tag:"Buque insignia", d:"Sustituye al motor 300 HPE de 278cc por un nuevo bloque de 310cc, con más prestaciones y menor consumo."},
+{n:"Vespa Primavera/Sprint 180", codigo:"—", serie:"Moderna 1996+", anio:"2026", pais:"Italia / Indonesia", flag:"🌏", decada:"2020s", motor:"4T, i-Get 180", cc:"174cc", pot:"~15 CV (11 kW)", vel:"—", peso:"—", bastidor:"—", tag:"Primicia técnica", d:"Nuevo motor de 174cc presentado primero en mercados como Indonesia, con freno de disco trasero de serie por primera vez en la gama pequeña."},
+];
+
+
+// Añadimos un id único a cada modelo
+MODELOS.forEach((m,i)=> m.id = i);
+
+// ---------------------------------------------------------------
+// RENDER
+// ---------------------------------------------------------------
+const DECADAS = [
+  {k:"todas", l:"Todas"},
+  {k:"origenes", l:"Orígenes"},
+  {k:"1940s", l:"1940s"},
+  {k:"1950s", l:"1950s"},
+  {k:"1960s", l:"1960s"},
+  {k:"1970s", l:"1970s"},
+  {k:"1980s", l:"1980s"},
+  {k:"1990s", l:"1990s"},
+  {k:"2000s", l:"2000s"},
+  {k:"2010s", l:"2010s"},
+  {k:"2020s", l:"2020s"},
+];
+
+const paisesUnicos = ["todos", ...new Set(MODELOS.map(m=>m.pais))];
+const seriesUnicas = ["todas", ...new Set(MODELOS.map(m=>m.serie))];
+
+let state = { q:"", decada:"todas", pais:"todos", serie:"todas" };
+
+function initChips(){
+  const cd = document.getElementById('chips-decada');
+  cd.innerHTML = DECADAS.map(d=>`<div class="chip ${d.k==='todas'?'active':''}" data-decada="${d.k}">${d.l}</div>`).join('');
+  cd.querySelectorAll('.chip').forEach(el=>{
+    el.addEventListener('click', ()=>{
+      state.decada = el.dataset.decada;
+      cd.querySelectorAll('.chip').forEach(c=>c.classList.remove('active'));
+      el.classList.add('active');
+      render();
+    });
+  });
+
+  const cp = document.getElementById('chips-pais');
+  cp.innerHTML = paisesUnicos.map(p=>`<div class="chip ${p==='todos'?'active':''}" data-pais="${p}">${p==='todos'?'Todos':p}</div>`).join('');
+  cp.querySelectorAll('.chip').forEach(el=>{
+    el.addEventListener('click', ()=>{
+      state.pais = el.dataset.pais;
+      cp.querySelectorAll('.chip').forEach(c=>c.classList.remove('active'));
+      el.classList.add('active');
+      render();
+    });
+  });
+
+  const cs = document.getElementById('chips-serie');
+  cs.innerHTML = seriesUnicas.map(s=>`<div class="chip ${s==='todas'?'active':''}" data-serie="${s}">${s==='todas'?'Todas':s}</div>`).join('');
+  cs.querySelectorAll('.chip').forEach(el=>{
+    el.addEventListener('click', ()=>{
+      state.serie = el.dataset.serie;
+      cs.querySelectorAll('.chip').forEach(c=>c.classList.remove('active'));
+      el.classList.add('active');
+      render();
+    });
+  });
+}
+
+function decadaBadge(dec){
+  const map = {origenes:"'45", "1940s":"40s","1950s":"50s","1960s":"60s","1970s":"70s","1980s":"80s","1990s":"90s","2000s":"00s","2010s":"10s","2020s":"20s"};
+  return map[dec] || "";
+}
+
+function cardHTML(m){
+  const codigoHTML = (m.codigo && m.codigo !== "—") ? `<div class="codigo-chasis">${m.codigo}</div>` : "";
+  const bastidorHTML = (m.bastidor && m.bastidor !== "—") ? `<div class="spec" style="grid-column:1 / -1;"><div class="k">Nº de bastidor (rango)</div><div class="v">${m.bastidor}</div></div>` : "";
+  return `
+  <div class="card">
+    <div class="card-top">
+      <div>
+        <h3>${m.n}</h3>
+        ${codigoHTML}
+        <div class="years">${m.anio}</div>
+        <div class="card-flag-row"><span>${m.flag}</span><span>${m.pais}</span></div>
+      </div>
+      <div class="badge-era">${decadaBadge(m.decada)}</div>
+    </div>
+    <div class="tag-row"><span class="tag">${m.tag}</span><span class="tag tag-serie">${m.serie}</span></div>
+    <div class="specs">
+      <div class="spec"><div class="k">Motor</div><div class="v">${m.motor}</div></div>
+      <div class="spec"><div class="k">Cilindrada</div><div class="v">${m.cc}</div></div>
+      <div class="spec"><div class="k">Potencia</div><div class="v">${m.pot}</div></div>
+      <div class="spec"><div class="k">Vel. máx.</div><div class="v">${m.vel}</div></div>
+      ${bastidorHTML}
+    </div>
+    <div class="desc">${m.d}</div>
+    <button class="btn-usar-modelo" data-id="${m.id}">➕ Usar este modelo</button>
+  </div>`;
+}
+
+function render(){
+  const q = state.q.trim().toLowerCase();
+  const filtered = MODELOS.filter(m=>{
+    if(state.decada!=='todas' && m.decada!==state.decada) return false;
+    if(state.pais!=='todos' && m.pais!==state.pais) return false;
+    if(state.serie!=='todas' && m.serie!==state.serie) return false;
+    if(q){
+      const hay = (m.n+" "+m.pais+" "+m.motor+" "+m.tag+" "+m.d+" "+m.codigo+" "+m.serie).toLowerCase();
+      if(!hay.includes(q)) return false;
+    }
+    return true;
+  });
+
+  const grid = document.getElementById('grid');
+  const empty = document.getElementById('empty');
+  document.getElementById('counter').textContent = filtered.length;
+
+  if(filtered.length===0){
+    grid.innerHTML = "";
+    empty.style.display = "block";
+    const termino = state.q.trim();
+    const btnGuardar = document.getElementById('btnGuardarPendiente');
+    document.getElementById('pendienteTermino').textContent = termino || "(sin nombre)";
+    btnGuardar.disabled = !termino;
+    document.getElementById('emptyText').textContent = termino
+      ? `«${termino}» no está en el catálogo.`
+      : "Ningún modelo coincide con esos filtros.";
+  } else {
+    empty.style.display = "none";
+    grid.innerHTML = filtered.map(cardHTML).join('');
+  }
+}
+
+document.getElementById('search').addEventListener('input', (e)=>{
+  state.q = e.target.value;
+  render();
+});
+
+document.getElementById('stat-total').textContent = MODELOS.length;
+document.getElementById('stat-paises').textContent = new Set(MODELOS.map(m=>m.pais)).size;
+
+// ---------------------------------------------------------------
+// MODELOS PENDIENTES (búsquedas sin resultado, guardadas localmente)
+// ---------------------------------------------------------------
+const PENDIENTES_KEY = 'vespa_modelos_pendientes';
+
+function getPendientes(){
+  try{
+    return JSON.parse(localStorage.getItem(PENDIENTES_KEY) || "[]");
+  }catch(e){ return []; }
+}
+function setPendientes(lista){
+  try{ localStorage.setItem(PENDIENTES_KEY, JSON.stringify(lista)); }catch(e){}
+  actualizarContadorPendientes();
+}
+function actualizarContadorPendientes(){
+  document.getElementById('pendientesCount').textContent = getPendientes().length;
+}
+
+document.getElementById('btnGuardarPendiente').addEventListener('click', ()=>{
+  const termino = state.q.trim();
+  if(!termino) return;
+  const lista = getPendientes();
+  if(!lista.some(p => p.texto.toLowerCase() === termino.toLowerCase())){
+    lista.unshift({ texto: termino, fecha: new Date().toLocaleDateString('es-ES') });
+    setPendientes(lista);
+  }
+  const btn = document.getElementById('btnGuardarPendiente');
+  btn.textContent = "✓ Guardado";
+  setTimeout(()=>{ btn.innerHTML = `➕ Guardar «<span id="pendienteTermino">${termino}</span>» como pendiente`; }, 1400);
+});
+
+function renderPendientes(){
+  const lista = getPendientes();
+  const cont = document.getElementById('listaPendientes');
+  if(lista.length===0){
+    cont.innerHTML = `<div class="panel-empty">Aún no has guardado ningún modelo pendiente.<br>Búscalo arriba y si no aparece, guárdalo desde ahí.</div>`;
+    return;
+  }
+  cont.innerHTML = lista.map((p,i)=>`
+    <div class="pendiente-item">
+      <div class="txt">${p.texto}<span class="fecha">Guardado el ${p.fecha}</span></div>
+      <button data-idx="${i}" class="btn-quitar-pendiente" title="Quitar">🗑</button>
+    </div>`).join('');
+  cont.querySelectorAll('.btn-quitar-pendiente').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const idx = parseInt(btn.dataset.idx,10);
+      const lista2 = getPendientes();
+      lista2.splice(idx,1);
+      setPendientes(lista2);
+      renderPendientes();
+    });
+  });
+}
+
+const panelPendientesOverlay = document.getElementById('panelPendientesOverlay');
+document.getElementById('btnAbrirPendientes').addEventListener('click', ()=>{
+  renderPendientes();
+  panelPendientesOverlay.classList.add('show');
+});
+document.getElementById('cerrarPendientes').addEventListener('click', ()=>{
+  panelPendientesOverlay.classList.remove('show');
+});
+document.getElementById('btnCopiarPendientes').addEventListener('click', ()=>{
+  const lista = getPendientes();
+  if(lista.length===0) return;
+  const texto = "Modelos Vespa pendientes de añadir al catálogo:\n" + lista.map(p=>`- ${p.texto}`).join('\n');
+  const btn = document.getElementById('btnCopiarPendientes');
+  const marcarCopiado = ()=>{ btn.textContent = "✓ Copiado"; setTimeout(()=> btn.textContent = "📋 Copiar lista", 1400); };
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(texto).then(marcarCopiado).catch(()=>{ prompt("Copia manualmente:", texto); });
+  } else {
+    prompt("Copia manualmente:", texto);
+  }
+});
+document.getElementById('btnVaciarPendientes').addEventListener('click', ()=>{
+  if(getPendientes().length===0) return;
+  if(confirm("¿Vaciar toda la lista de modelos pendientes?")){
+    setPendientes([]);
+    renderPendientes();
+  }
+});
+
+actualizarContadorPendientes();
+
+// ---------------------------------------------------------------
+// USAR ESTE MODELO → envía los datos a Mis Vehículos (si está embebido
+// en un iframe) para precargar el formulario de "Nuevo vehículo".
+// Si el catálogo se abre suelto (standalone/APK/exe), copia el texto.
+// ---------------------------------------------------------------
+const estaEmbebido = (window.self !== window.top);
+
+document.getElementById('grid').addEventListener('click', (e)=>{
+  const btn = e.target.closest('.btn-usar-modelo');
+  if(!btn) return;
+  const id = parseInt(btn.dataset.id, 10);
+  const m = MODELOS.find(x => x.id === id);
+  if(!m) return;
+
+  const nombreCompleto = m.n;
+  const subtitulo = `${m.cc} · ${m.anio}`;
+
+  if(estaEmbebido){
+    window.parent.postMessage({
+      type: 'vespa-modelo-seleccionado',
+      data: {
+        // marca:'Vespa' es la condición que usa Mis Vehículos para crear el
+        // vehículo directamente (sin modal intermedio). Este catálogo es
+        // solo de Vespa, así que siempre va marcada así.
+        marca: 'Vespa',
+        nombre: nombreCompleto,
+        sub: subtitulo,
+        codigo: m.codigo || '',
+        anio: m.anio || '',
+        pais: m.pais || '',
+        motor: m.motor || '',
+        cc: m.cc || '',
+        pot: m.pot || '',
+        vel: m.vel || '',
+        peso: m.peso || '',
+        bastidor: m.bastidor || ''
+      }
+    }, '*');
+    btn.textContent = "✓ Vehículo creado";
+  } else {
+    const texto = `${nombreCompleto}\n${subtitulo}`;
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(texto);
+    }
+    btn.textContent = "✓ Copiado";
+  }
+  btn.classList.add('enviado');
+  setTimeout(()=>{ btn.textContent = "➕ Usar este modelo"; btn.classList.remove('enviado'); }, 1800);
+});
+
+initChips();
+render();
+</script>
+</body>
+</html>
